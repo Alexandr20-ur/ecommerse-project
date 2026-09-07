@@ -1,0 +1,71 @@
+services:
+  vue:
+    build:
+      context: ./vue
+      dockerfile: ../infra/vue/Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      # Браузер ходит на API с хоста, не из контейнера Vue.
+      VITE_API_URL: http://localhost:8000
+    volumes:
+      - ./vue:/app
+      - /app/node_modules
+    networks:
+      - app
+    depends_on:
+      - golang
+    stdin_open: true
+    tty: true
+
+  golang:
+    build:
+      context: ./golang
+      dockerfile: ../infra/golang/Dockerfile
+    container_name: go-app-ecommerce
+    working_dir: /app
+    volumes:
+      - ./golang:/app
+    networks:
+      - app
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+      - "2345:2345"
+    environment:
+      GO111MODULE: "on"
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: ${DATABASE_DSN}
+      GOOSE_MIGRATION_DIR: ./migrations
+      DATABASE_DSN: ${DATABASE_DSN}
+    tty: true
+
+  postgres:
+    image: postgres:17
+    container_name: ecommerse-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  app:
+    driver: bridge

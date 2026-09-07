@@ -1,0 +1,35 @@
+{{ define "navigation" }}
+    <nav class="py-1 bg-base border-bottom max-sm:hidden">
+        <div class="container">
+            <ul class="nav">
+                <li>
+                    <a class="nav-link" href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-menu"><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>
+                        All categories
+                    </a>
+                </li>
+                <li> <a class="nav-link" href="#">Recommends</a> </li>
+                <li> <a class="nav-link" href="#">New arrivals</a> </li>
+                <li> <a class="nav-link" href="#">Bestsellers</a> </li>
+                <li> <a class="nav-link" href="#">Gift boxes</a> </li>
+                <li> <a class="nav-link" href="#">Articles</a> </li>
+                <li class="group">
+                    <a data-toggle="mymenu_2" class="nav-link  has-icon-dropdown" href="#">More</a>
+                    <nav class="dropdown lg:min-w-50 group-hover:d-block d-none">
+                        <a class="dropdown-item" href="#">Example link 1</a>
+                        <a class="dropdown-item" href="#">Example link 2</a>
+                        <a class="dropdown-item" href="#">Get Ecomerce UI</a>
+                    </nav>
+                </li>
+                <li class="ml-auto group">
+                    <a class="nav-link  has-icon-dropdown" href="#"> 🇩🇪 Germany, € EUR </a>
+                    <nav class="dropdown right-0 lg:min-w-50 group-hover:d-block d-none">
+                        <a class="dropdown-item" href="#"> 🇺🇸 USA, DOllar</a>
+                        <a class="dropdown-item" href="#"> 🇷🇺 Russia, RUB</a>
+                    </nav>
+                </li>
+            </ul>
+        </div>
+        <!-- container end.// -->
+    </nav>
+{{ end }}
