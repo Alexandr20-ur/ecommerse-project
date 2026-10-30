@@ -5,6 +5,7 @@ services:
       dockerfile: ../infra/vue/Dockerfile
     ports:
       - "3000:3000"
+    command: ["npm", "run", "dev"]
     environment:
       NODE_ENV: development
       # Браузер ходит на API с хоста, не из контейнера Vue.
@@ -35,6 +36,10 @@ services:
     ports:
       - "8000:8000"
       - "2345:2345"
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
     environment:
       GO111MODULE: "on"
       GOOSE_DRIVER: postgres

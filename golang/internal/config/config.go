@@ -3,6 +3,7 @@ package config
 import (
 	"ecommerce/pkg/log"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -10,18 +11,26 @@ import (
 type Config struct {
 	DB    DBConfig
 	Redis RedisConfig
+	JWT   JWTConfig
 }
 
 type DBConfig struct {
-	URL          string
-	MaxOpenConns int
-	MaxIdleConns int
+	URL             string
+	MaxConns        int32
+	MinConns        int32
+	MaxConnLifetime time.Duration
+	MaxConnIdleTime time.Duration
 }
 
 type RedisConfig struct {
 	Addr     string
 	Password string
 	DB       int
+}
+
+type JWTConfig struct {
+	Secret string
+	TTL    time.Duration
 }
 
 func (config *Config) LoadConfig(logger *log.Logger) error {
@@ -32,9 +41,16 @@ func (config *Config) LoadConfig(logger *log.Logger) error {
 	}
 
 	config.DB = DBConfig{
-		URL:          os.Getenv("DATABASE_DSN"),
-		MaxOpenConns: 10,
-		MaxIdleConns: 10,
+		URL:             os.Getenv("DATABASE_DSN"),
+		MaxConns:        10, // или по формуле ниже
+		MinConns:        2,
+		MaxConnIdleTime: 5 * time.Minute,
+		MaxConnLifetime: 30 * time.Minute,
+	}
+
+	config.JWT = JWTConfig{
+		Secret: os.Getenv("JWT_SECRET"),
+		TTL:    time.Hour,
 	}
 	return nil
 }

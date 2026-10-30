@@ -1,31 +1,20 @@
 package home
 
 import (
-	"ecommerce/internal/handler"
 	"ecommerce/pkg/log"
 	"fmt"
 	"net/http"
 )
 
 type HomeHandler struct {
-	handler.Handler
+	logger *log.Logger
 }
 
-func NewHomeHandler(logger *log.Logger) (*HomeHandler, error) {
-	h, err := handler.NewHandler(logger)
-	if err != nil {
-		logger.Warn("Failed to create new home handler:" + err.Error())
-		return nil, err
-	}
-
-	return &HomeHandler{*h}, nil
+func NewHomeHandler(logger *log.Logger) *HomeHandler {
+	return &HomeHandler{logger: logger}
 }
-func RegisterRoutes(mux *http.ServeMux, logger *log.Logger) {
-	h, err := NewHomeHandler(logger)
-	if err != nil {
-		logger.Warn("Failed to create new home handler:" + err.Error())
-		return
-	}
+
+func RegisterRoutes(mux *http.ServeMux, h *HomeHandler) {
 	mux.HandleFunc("GET /", h.handlerMain)
 }
 

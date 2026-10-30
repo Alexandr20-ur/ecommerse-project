@@ -2,68 +2,83 @@ package auth
 
 import (
 	"ecommerce/internal/domain"
-	"ecommerce/internal/handler"
+	"ecommerce/internal/response"
+	"ecommerce/internal/service"
 	"ecommerce/pkg/log"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 )
 
-type AuthHandler struct {
-	handler.Handler
+type Handler struct {
+	logger  *log.Logger
+	service *service.AuthService
 }
 
-func newAuthHandler( logger *log.Logger) (*AuthHandler, error) {
-	h, err := handler.NewHandler(logger)
-	if err != nil {
-		logger.Warn("Failed to create new home handler:" + err.Error())
-		return nil, err
-	}
-
-	return &AuthHandler{*h}, nil
+func NewAuthHandler(logger *log.Logger, authService *service.AuthService) *Handler {
+	return &Handler{logger, authService}
 }
 
-func RegisterRoutes(mux *http.ServeMux, logger *log.Logger) {
-	h, err := newAuthHandler(logger)
-	if err != nil {
-		logger.Warn("Failed to create new home handler:" + err.Error())
-		return
-	}
+func RegisterRoutes(mux *http.ServeMux, h *Handler) {
 	mux.HandleFunc("POST /auth", h.handlerAuth)
 	mux.HandleFunc("POST /register", h.handlerRegister)
 }
 
-//Авторизация пользователя
-func (h *AuthHandler) handlerAuth(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
+// Авторизация пользователя
+func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	var userForm domain.UserForm
+	resp := response.LoginResponse{}
+
+	err := json.NewDecoder(r.Body).Decode(&userForm)
 	if err != nil {
-		h.GetLogger().Warn("Failder to read body:" + err.Error())
-		http.Error(w, "Failed to read body:" + err.Error(), http.StatusBadRequest)
+		resp.Err = "Failder to parse body:" + err.Error()
+		h.logger.Error(resp.Err)
+		response.WriteJson(w, http.StatusBadRequest, resp)
 		return
 	}
 
-	defer r.Body.Close()
-	fmt.Println("Raw body:", string(body))
+	token, err := h.service.Login(r.Context(), &userForm)
+
+	if err != nil {
+		resp.Err = "Failder to login:" + err.Error()
+		h.logger.Error(resp.Err)
+		response.WriteJson(w, http.StatusUnauthorized, resp)
+		return
+	}
+
+	if token == "" {
+		resp.Err = "Failder to login"
+		h.logger.Error(resp.Err)
+		response.WriteJson(w, http.StatusUnauthorized, resp)
+		return
+	}
+
+	resp.Token = token
+	response.WriteJson(w, http.StatusOK, resp)
+	return
 }
 
-//Регистрация пользователя
-func (h *AuthHandler) handlerRegister(w http.ResponseWriter, r *http.Request) {
-	body, err := io.ReadAll(r.Body)
-	if err != nil {
-		h.GetLogger().Warn(err.Error())
-		http.Error(w, "Failder to read body:" + err.Error(), http.StatusBadRequest)
-		return
-	}
-
+// Регистрация пользователя
+func (h *Handler) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var loginData domain.UserForm
-	if err := json.Unmarshal(body, &loginData); err != nil {
-		h.GetLogger().Warn(err.Error())
-		http.Error(w, "Failder to parse json: " + err.Error(), http.StatusBadGateway)
+	var userForm domain.UserForm
+
+	err := json.NewDecoder(r.Body).Decode(&userForm)
+
+	if err != nil {
+		h.logger.Error("Failder to parse body:" + err.Error())
+		http.Error(w, "Failder to parse body:"+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	
+	err = h.service.Register(r.Context(), &userForm)
+	if err != nil {
+		h.logger.Error("Failder to register user:" + err.Error())
+		http.Error(w, "Failder to register user:"+err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	fmt.Fprintf(w, "OK")
 }
