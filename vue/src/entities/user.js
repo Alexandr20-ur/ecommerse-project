@@ -6,13 +6,25 @@ import axios from 'axios'
 export const useUserStore = defineStore('user', {
     state: () => ({
         user: null,
-        token: null,
-        isAuthenticated: false
+        // При старте проверяем, есть ли токен в localStorage
+        token: localStorage.getItem('accessToken') || null,
+        // Если токен есть, значит пользователь авторизован
+        isAuthenticated: !!localStorage.getItem('accessToken')
     }),
     actions: {
-        async login({login, password}) {
+        async login({email, password}) {
             try {
-                let response = await axios.post('http://localhost:8000/auth', {login, password})
+                let response = await axios.post('http://localhost:8000/auth', {email, password})
+                this.token = response.data.token
+                this.isAuthenticated = true
+
+                localStorage.setItem('accessToken', response.data.token)
+
+                notify({
+                    title: "Успех",
+                    text: "Вы успешно вошли!",
+                    type: "success"
+                })
             } catch (error) {
                 let data = error.response.data
                 if (!data) {

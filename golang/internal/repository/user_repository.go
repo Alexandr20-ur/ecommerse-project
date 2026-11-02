@@ -35,6 +35,7 @@ func (r UserRepository) Create(ctx context.Context, user *domain.User) error {
 		user.ID,
 		user.Email,
 		user.Phone,
+		user.PasswordHash,
 		user.FullName,
 		user.AvatarURL,
 		user.Role,
@@ -63,7 +64,21 @@ func (r UserRepository) FindByEmail(ctx context.Context, email string) (*domain.
 	}
 
 	var u domain.User
-	err = r.pool.QueryRow(ctx, query, args...).Scan(&u)
+
+	err = r.pool.QueryRow(ctx, query, args...).Scan(
+		&u.ID,
+		&u.Email,
+		&u.Phone,
+		&u.PasswordHash,
+		&u.FullName,
+		&u.AvatarURL,
+		&u.Role,
+		&u.IsActive,
+		&u.IsEmailVerified,
+		&u.LastLoginAt,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {

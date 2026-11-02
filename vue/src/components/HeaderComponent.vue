@@ -1,5 +1,10 @@
 <script setup>
     import logoSvg from '@/assets/images/logo-shape.svg'  // ← импортируем
+    import { useUserStore } from "@/entities/user.js";
+
+    const userStore = useUserStore()
+
+    console.log(userStore.isAuthenticated)
 </script>
 <template>
 <header class="border-bottom bg-base">

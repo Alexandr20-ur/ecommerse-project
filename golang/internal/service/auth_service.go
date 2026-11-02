@@ -25,13 +25,19 @@ func NewAuthService(repository *repository.UserRepository, logger *log.Logger, t
 }
 
 func (s AuthService) Login(ctx context.Context, userForm *domain.UserForm) (string, error) {
-	user, err := s.repository.FindByEmail(ctx, userForm.Login)
+	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
-		return "", err
+		return "", err //Ошибка базы данных(500)
 	}
 
 	if user == nil {
-		return "", nil
+		return "", domain.ErrInvalidCredentials
+	}
+
+	//Проверка пароля на актуальность
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(userForm.Password))
+	if err != nil {
+		return "", domain.ErrInvalidCredentials
 	}
 
 	token, err := s.tokens.GenerateToken(user.ID)
@@ -43,7 +49,7 @@ func (s AuthService) Login(ctx context.Context, userForm *domain.UserForm) (stri
 }
 
 func (s AuthService) Register(ctx context.Context, userForm *domain.UserForm) error {
-	user, err := s.repository.FindByEmail(ctx, userForm.Login)
+	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
 		return err
 	}
@@ -60,7 +66,7 @@ func (s AuthService) Register(ctx context.Context, userForm *domain.UserForm) er
 		return err
 	}
 
-	user = domain.NewUser(userForm.Login, string(hashPassword))
+	user = domain.NewUser(userForm.Email, string(hashPassword))
 
 	err = s.repository.Create(ctx, user)
 	if err != nil {

@@ -7,4 +7,5 @@ const router = createRouter({
   routes: routes,
 })
 
+setupRouterGuards(router)
 export default router

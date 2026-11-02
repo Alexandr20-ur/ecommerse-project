@@ -22,15 +22,15 @@ type User struct {
 }
 
 type UserForm struct {
-	Login    string `json:"login"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func NewUser(login string, hashPassword string) *User {
+func NewUser(email string, hashPassword string) *User {
 	now := time.Now()
 	return &User{
 		ID:              uuid.New(),
-		Email:           login,
+		Email:           email,
 		PasswordHash:    hashPassword,
 		Role:            "user",
 		IsActive:        true,

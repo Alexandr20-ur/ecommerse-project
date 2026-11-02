@@ -7,7 +7,7 @@ export default {
   data() {
     return {
       formData: {
-        login: "",
+        email: "",
         password: ""
       }
     }
@@ -42,7 +42,7 @@ export default {
            <fieldset>
         <div class="mb-4">
           <label class="form-label fw-medium">Почта или логин</label>
-          <input v-model="formData.login" type="text" class="form-control" placeholder="Введите почту или логин">
+          <input v-model="formData.email" type="text" class="form-control" placeholder="Введите почту или логин">
         </div>
         <div class="mb-2">
           <label class="form-label fw-medium">Пароль</label>

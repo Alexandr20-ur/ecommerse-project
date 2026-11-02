@@ -47,13 +47,6 @@ func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if token == "" {
-		resp.Err = "Failder to login"
-		h.logger.Error(resp.Err)
-		response.WriteJson(w, http.StatusUnauthorized, resp)
-		return
-	}
-
 	resp.Token = token
 	response.WriteJson(w, http.StatusOK, resp)
 	return
