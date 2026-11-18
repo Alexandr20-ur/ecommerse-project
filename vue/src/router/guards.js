@@ -1,10 +1,8 @@
 export function setupRouterGuards(router) {
-  router.beforeEach((to, from, next) => {
+  router.beforeEach((to, from) => {
     const isAuthenticated = !!localStorage.getItem('accessToken')
-    if (to.meta.requiresAuth && !isAuthenticated) {
-      next({ name: 'home' })
-    } else {
-      next()
+    if (!isAuthenticated) {
+      return { name: 'home'}
     }
   })
 }

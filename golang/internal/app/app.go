@@ -75,3 +75,17 @@ func corsMiddleware(next http.Handler) http.Handler {
 		next.ServeHTTP(w, r)
 	})
 }
+
+type Callback func(next http.Handler) http.Handler
+
+func middleware(next http.Handler) http.Handler {
+	middlewares := []Callback{
+		corsMiddleware,
+	}
+
+	for _, mid := range middlewares {
+		next = mid(next)
+	}
+
+	return next
+}

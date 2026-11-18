@@ -25,24 +25,40 @@ export const useUserStore = defineStore('user', {
                     text: "Вы успешно вошли!",
                     type: "success"
                 })
+
+                return true
             } catch (error) {
-                let data = error.response.data
-                if (!data) {
-                    notify({
-                        title: "Ошибка",
-                        type: "error",
-                        text: error
-                    })
-                    return
+                let errorMessage = "Произошла неизвестная ошибка"
+
+                if (error.response) {
+                    let data = error.response.data
+                    if (data && data.Err) {
+                        errorMessage = data.Err
+                    } else {
+                        // Если сервер вернул просто статус без тела
+                        errorMessage = `Ошибка сервера: ${error.response.status}`
+                    }
+                } else if(error.request) {
+                    // Запрос ушел, но ответа нет (сервер лежит, нет сети)
+                    errorMessage = "Сервер недоступен. Проверьте подключение к интернету."
+                } else {
+                    errorMessage = error.message
                 }
 
                 notify({
                     title: "Ошибка",
-                    text: data.Err,
-                    type: "error"
+                    type: "error",
+                    text: errorMessage
                 })
-                console.log(error.response.data)
+
+                console.error("Полная ошибка:", error)
+               return false
             }
+        },
+        async logout() {
+            this.token = null
+            this.user = null
+            localStorage.removeItem('accessToken')
         },
         async register({email, password}) {
             let response = await axios.post('http://localhost:8000/register', {email, password})

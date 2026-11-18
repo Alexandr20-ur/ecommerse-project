@@ -1,6 +1,8 @@
 <script>
 import { importImages } from '@/utils/images'
 import { useUserStore } from '@/entities/user';
+import router from "@/router/index.js";
+
 const images = importImages()
 
 export default {
@@ -15,16 +17,10 @@ export default {
   methods: {
     async handleSubmit() {
       let userStore = useUserStore()
-      userStore.login(this.formData)
-      // try {
-      //   let response = await fetch('http://localhost:8000/auth', {
-      //     method: 'POST',
-      //     body: JSON.stringify(this.formData)
-      //   })
-      //   console.log(response.json)
-      // } catch (error) {
-      //   console.log(error.message)
-      // }
+      let success = await userStore.login(this.formData)
+      if (success) {
+        router.push('/')
+      }
     }
   }
 }

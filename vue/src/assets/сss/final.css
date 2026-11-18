@@ -44968,3 +44968,25 @@ h1 {
 .gallery-wrap .item-thumb:hover {
   border-color: var(--neutral-400);
 }
+
+/* assets/css/final.css */
+
+/* Переопределяем цвета меню глобально для всего приложения */
+.el-menu {
+  --el-menu-bg-color: #f8fafc;
+  --el-menu-text-color: #475569;
+  --el-menu-active-color: #0f172a;
+
+  /* Цвет фона активного элемента (нужно включить вручную, так как это не стандартная переменная EP) */
+}
+
+/* Для активного состояния лучше использовать класс */
+.el-menu-item.is-active {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  font-weight: 500;
+}
+
+.el-menu-item:hover:not(.is-active) {
+  background-color: #f1f5f9 !important;
+}
