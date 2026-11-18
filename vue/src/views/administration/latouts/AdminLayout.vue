@@ -1,4 +1,3 @@
-<!-- src/layouts/AdminLayout.vue -->
 <script setup>
 import AdminSidebar from '@/components/administration/AdminSidebar.vue'
 import AdminHeader from '@/components/administration/AdminHeader.vue'

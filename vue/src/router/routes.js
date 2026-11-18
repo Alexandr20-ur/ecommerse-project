@@ -3,7 +3,8 @@ import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
 import AdminLayout from "@/views/administration/latouts/AdminLayout.vue";
 import DashboardView from "@/views/administration/DashboardView.vue";
-import ProductsView from "@/views/administration/ProductsView.vue";
+import ProductsView from "@/views/administration/module/products/ProductsView.vue";
+import CreateProductsView from "@/views/administration/module/products/CreateProductsView.vue";
 
 export const routes = [
     {
@@ -43,6 +44,11 @@ export const routes = [
                 path: 'products',
                 name: 'admin.Products',
                 component: ProductsView
+            },
+            {
+                path: 'products/create',
+                name: 'admin.Products.Create',
+                component: CreateProductsView
             }
         ]
     }

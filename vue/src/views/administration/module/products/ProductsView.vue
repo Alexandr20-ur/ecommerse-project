@@ -1,16 +1,9 @@
 <script setup>
 import ViewGrid from '@/components/ViewGrid.vue'
-import {
-  Check,
-  Delete,
-  Edit,
-  Message,
-  Search,
-  Star,
-} from '@element-plus/icons-vue'
-
+import { useRouter } from 'vue-router'
 import { ref } from 'vue'
 
+const router = useRouter()
 // Твои данные (придут с бэкенда)
 const products = ref([
   { id: 1, date: '2016-05-03', name: 'Tom', address: 'Los Angeles' },
@@ -28,20 +21,36 @@ const productColumns = [
 const onEdit = (row) => console.log('Редактируем товар:', row.id)
 const onDelete = (row) => console.log('Удаляем товар:', row.id)
 const onView = (row) => console.log('Смотрим товар:', row.id)
+
+const handleAction = (command) => {
+  switch (command) {
+    case 'add':
+      router.push({name: 'admin.Products.Create'})
+      break
+    case 'import':
+      console.log(command)
+      break
+    case 'groups':
+      console.log(command)
+      break
+  }
+}
 </script>
 
 <template>
-  <el-row :gutter="20" class="mb-3">
-    <el-col :span="16"><h2 class="grid-content">Товары</h2></el-col>
-    <el-col :span="6">
-      <div class="button-row">
-        <el-button :icon="Search" circle />
-        <el-button type="primary" :icon="Edit" circle />
-        <el-button type="success" :icon="Check" circle />
-        <el-button type="info" :icon="Message" circle />
-        <el-button type="warning" :icon="Star" circle />
-        <el-button type="danger" :icon="Delete" circle />
-      </div>
+  <el-row  class="mb-3">
+    <el-col :span="22"><h2 class="grid-content">Товары</h2></el-col>
+    <el-col :span="2">
+      <el-dropdown placement="top-end" @command="handleAction">
+        <el-button> Действия </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="add">Добавить товар</el-dropdown-item>
+            <el-dropdown-item command="import">Импорт товаров</el-dropdown-item>
+            <el-dropdown-item command="groups">Посмотреть группы товаров</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </el-col>
   </el-row>
   <!-- Использование компонента -->
