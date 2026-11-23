@@ -1,17 +1,20 @@
 package app
 
 import (
-	"ecommerce/internal/repository"
+	"ecommerce/internal/auth"
+	"ecommerce/internal/product"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Repositories struct {
-	User *repository.UserRepository
+	User    *auth.UserRepository
+	Product *product.Repository
 }
 
 func newRepositories(pool *pgxpool.Pool) *Repositories {
 	return &Repositories{
-		User: repository.NewUserRepository(pool),
+		User:    auth.NewUserRepository(pool),
+		Product: product.NewRepository(pool),
 	}
 }

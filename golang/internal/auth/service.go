@@ -1,9 +1,8 @@
-package service
+package auth
 
 import (
 	"context"
-	"ecommerce/internal/domain"
-	"ecommerce/internal/repository"
+	"ecommerce/internal/errors"
 	"ecommerce/pkg/log"
 
 	"github.com/google/uuid"
@@ -14,30 +13,30 @@ type TokenGenerator interface {
 	GenerateToken(userID uuid.UUID) (string, error)
 }
 
-type AuthService struct {
-	repository *repository.UserRepository
+type Service struct {
+	repository *UserRepository
 	logger     *log.Logger
 	tokens     TokenGenerator
 }
 
-func NewAuthService(repository *repository.UserRepository, logger *log.Logger, tokens TokenGenerator) *AuthService {
-	return &AuthService{repository: repository, logger: logger, tokens: tokens}
+func NewAuthService(repository *UserRepository, logger *log.Logger, tokens TokenGenerator) *Service {
+	return &Service{repository: repository, logger: logger, tokens: tokens}
 }
 
-func (s AuthService) Login(ctx context.Context, userForm *domain.UserForm) (string, error) {
+func (s Service) Login(ctx context.Context, userForm *UserForm) (string, error) {
 	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
 		return "", err //Ошибка базы данных(500)
 	}
 
 	if user == nil {
-		return "", domain.ErrInvalidCredentials
+		return "", errors.ErrInvalidCredentials
 	}
 
 	//Проверка пароля на актуальность
 	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(userForm.Password))
 	if err != nil {
-		return "", domain.ErrInvalidCredentials
+		return "", errors.ErrInvalidCredentials
 	}
 
 	token, err := s.tokens.GenerateToken(user.ID)
@@ -48,14 +47,14 @@ func (s AuthService) Login(ctx context.Context, userForm *domain.UserForm) (stri
 	return token, nil
 }
 
-func (s AuthService) Register(ctx context.Context, userForm *domain.UserForm) error {
+func (s Service) Register(ctx context.Context, userForm *UserForm) error {
 	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
 		return err
 	}
 
 	if user != nil {
-		return domain.ErrUserAlreadyExists
+		return errors.ErrUserAlreadyExists
 	}
 
 	hashPassword, err := bcrypt.GenerateFromPassword(
@@ -66,7 +65,7 @@ func (s AuthService) Register(ctx context.Context, userForm *domain.UserForm) er
 		return err
 	}
 
-	user = domain.NewUser(userForm.Email, string(hashPassword))
+	user = NewUser(userForm.Email, string(hashPassword))
 
 	err = s.repository.Create(ctx, user)
 	if err != nil {

@@ -1,7 +1,7 @@
 <script setup>
 import logoSvg from '@/assets/images/logo-shape.svg' // ← импортируем
 import { DoorOpen, LogOut } from '@lucide/vue'
-import {useUserStore} from "@/entities/user.js";
+import {useUserStore} from "@/entities/user.ts";
 import router from "@/router/index.js";
 
 const userStore = useUserStore()

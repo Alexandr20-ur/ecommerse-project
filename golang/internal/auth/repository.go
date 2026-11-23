@@ -1,8 +1,7 @@
-package repository
+package auth
 
 import (
 	"context"
-	"ecommerce/internal/domain"
 	"ecommerce/pkg/database"
 	"errors"
 
@@ -18,7 +17,7 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{pool}
 }
 
-func (r UserRepository) Create(ctx context.Context, user *domain.User) error {
+func (r UserRepository) Create(ctx context.Context, user *User) error {
 
 	query := `
         INSERT INTO users (
@@ -51,7 +50,7 @@ func (r UserRepository) Create(ctx context.Context, user *domain.User) error {
 	return nil
 }
 
-func (r UserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+func (r UserRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
 
 	builder := database.Query().
 		Select().
@@ -63,7 +62,7 @@ func (r UserRepository) FindByEmail(ctx context.Context, email string) (*domain.
 		return nil, err
 	}
 
-	var u domain.User
+	var u User
 
 	err = r.pool.QueryRow(ctx, query, args...).Scan(
 		&u.ID,

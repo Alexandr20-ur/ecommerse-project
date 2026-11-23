@@ -1,6 +1,6 @@
 <script>
 import { importImages } from '@/utils/images'
-import { useUserStore } from '@/entities/user';
+import { useUserStore } from '@/entities/user.ts';
 import router from "@/router/index.js";
 
 const images = importImages()

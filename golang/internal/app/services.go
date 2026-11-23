@@ -3,16 +3,19 @@ package app
 import (
 	"ecommerce/internal/auth"
 	"ecommerce/internal/config"
-	"ecommerce/internal/service"
+	"ecommerce/internal/jwt"
+	"ecommerce/internal/product"
 	"ecommerce/pkg/log"
 )
 
 type Services struct {
-	Auth *service.AuthService
+	Auth    *auth.Service
+	Product *product.Service
 }
 
-func newServices(repos *Repositories, cfg *config.Config, logger *log.Logger, jwtManager *auth.JWTManager) *Services {
+func newServices(repos *Repositories, cfg *config.Config, logger *log.Logger, jwtManager *jwt.JWTManager) *Services {
 	return &Services{
-		Auth: service.NewAuthService(repos.User, logger, jwtManager),
+		Auth:    auth.NewAuthService(repos.User, logger, jwtManager),
+		Product: product.NewService(repos.Product, logger),
 	}
 }

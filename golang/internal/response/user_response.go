@@ -1,7 +1,6 @@
 package response
 
 import (
-	"ecommerce/internal/domain"
 	"time"
 
 	"github.com/google/uuid"
@@ -18,15 +17,15 @@ type UserResponse struct {
 	CreatedAt       time.Time `json:"created_at"`
 }
 
-func NewUserResponse(u *domain.User) *UserResponse {
-	return &UserResponse{
-		ID:              u.ID,
-		Email:           u.Email,
-		Phone:           u.Phone,
-		FullName:        u.FullName,
-		AvatarURL:       u.AvatarURL,
-		Role:            u.Role,
-		IsEmailVerified: u.IsEmailVerified,
-		CreatedAt:       u.CreatedAt,
-	}
-}
+//func NewUserResponse(u *auth.User) *UserResponse {
+//	return &UserResponse{
+//		ID:              u.ID,
+//		Email:           u.Email,
+//		Phone:           u.Phone,
+//		FullName:        u.FullName,
+//		AvatarURL:       u.AvatarURL,
+//		Role:            u.Role,
+//		IsEmailVerified: u.IsEmailVerified,
+//		CreatedAt:       u.CreatedAt,
+//	}
+//}

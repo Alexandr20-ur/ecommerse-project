@@ -1,20 +1,19 @@
 package http
 
 import (
-	"ecommerce/internal/auth"
-	"ecommerce/internal/home"
+	"ecommerce/internal/transport"
 	"net/http"
 )
 
-type Handlers struct {
-	Home *home.HomeHandler
-	Auth *auth.Handler
-}
-
-func NewRouter(h Handlers) *http.ServeMux {
+func NewRouter(modules ...transport.Module) *http.ServeMux {
 	mux := http.NewServeMux()
 
-	home.RegisterRoutes(mux, h.Home)
-	auth.RegisterRoutes(mux, h.Auth)
+	apiMux := http.NewServeMux()
+
+	for _, module := range modules {
+		module.RegisterRoutes(apiMux)
+	}
+
+	mux.Handle("/api/", http.StripPrefix("/api", apiMux))
 	return mux
 }

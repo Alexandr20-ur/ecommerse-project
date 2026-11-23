@@ -1,9 +1,7 @@
 package auth
 
 import (
-	"ecommerce/internal/domain"
 	"ecommerce/internal/response"
-	"ecommerce/internal/service"
 	"ecommerce/pkg/log"
 	"encoding/json"
 	"fmt"
@@ -12,22 +10,17 @@ import (
 
 type Handler struct {
 	logger  *log.Logger
-	service *service.AuthService
+	service *Service
 }
 
-func NewAuthHandler(logger *log.Logger, authService *service.AuthService) *Handler {
+func NewAuthHandler(logger *log.Logger, authService *Service) *Handler {
 	return &Handler{logger, authService}
-}
-
-func RegisterRoutes(mux *http.ServeMux, h *Handler) {
-	mux.HandleFunc("POST /auth", h.handlerAuth)
-	mux.HandleFunc("POST /register", h.handlerRegister)
 }
 
 // Авторизация пользователя
 func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var userForm domain.UserForm
+	var userForm UserForm
 	resp := response.LoginResponse{}
 
 	err := json.NewDecoder(r.Body).Decode(&userForm)
@@ -56,7 +49,7 @@ func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var userForm domain.UserForm
+	var userForm UserForm
 
 	err := json.NewDecoder(r.Body).Decode(&userForm)
 

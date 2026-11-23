@@ -2,9 +2,9 @@ package app
 
 import (
 	"context"
-	"ecommerce/internal/auth"
 	"ecommerce/internal/config"
 	myhttp "ecommerce/internal/http"
+	"ecommerce/internal/jwt"
 	"ecommerce/pkg/database"
 	mylog "ecommerce/pkg/log"
 	"net/http"
@@ -32,20 +32,21 @@ func Run() error {
 
 	defer pool.Close()
 
-	jwtManager := auth.NewJWTManager(cfg.JWT.Secret, cfg.JWT.TTL)
+	jwtManager := jwt.NewJWTManager(cfg.JWT.Secret, cfg.JWT.TTL)
 
 	repos := newRepositories(pool)
 	services := newServices(repos, cfg, logger, jwtManager)
 	handlers := newHandlers(services, logger)
 
-	mux := myhttp.NewRouter(handlers)
+	modules := NewModules(handlers)
+	mux := myhttp.NewRouter(modules.All()...)
 	return serve(mux)
 }
 
 func serve(mux *http.ServeMux) error {
 	srv := &http.Server{
 		Addr:         ":8000",
-		Handler:      corsMiddleware(mux),
+		Handler:      middleware(mux),
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}
@@ -56,36 +57,4 @@ func serve(mux *http.ServeMux) error {
 	}
 
 	return nil
-}
-
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Разрешаем все origins для разработки
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization, X-Requested-With")
-		w.Header().Set("Access-Control-Allow-Credentials", "true")
-
-		// Обрабатываем preflight запросы (OPTIONS)
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-type Callback func(next http.Handler) http.Handler
-
-func middleware(next http.Handler) http.Handler {
-	middlewares := []Callback{
-		corsMiddleware,
-	}
-
-	for _, mid := range middlewares {
-		next = mid(next)
-	}
-
-	return next
 }

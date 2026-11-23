@@ -2,17 +2,17 @@
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { Undo } from '@lucide/vue'
+import { productService } from '@/entities/product/api.ts'
+import {
+  createEmptyProductForm,
+  type CreateProductRequest
+} from '@/entities/product/model.ts'
 
 const router = useRouter()
 const formRef = ref()
 
 // Начальное состояние формы под нашу таблицу products
-const form = reactive({
-  name: '',
-  description: '',
-  price: null,
-  stock: 0,
-})
+const form = reactive<CreateProductRequest>(createEmptyProductForm())
 
 // Правила валидации
 const rules = reactive({
@@ -36,6 +36,8 @@ const handleSubmit = async () => {
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
+      let response = await productService.create(form)
+      console.log(response)
       console.log('Данные для отправки на Go-бэкенд:', JSON.parse(JSON.stringify(form)))
       // TODO: Здесь будет вызов API createProduct(form)
       // После успеха: router.push({ name: 'admin.Products' })
