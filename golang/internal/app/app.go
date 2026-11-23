@@ -5,6 +5,7 @@ import (
 	"ecommerce/internal/config"
 	myhttp "ecommerce/internal/http"
 	"ecommerce/internal/jwt"
+	"ecommerce/internal/middleware"
 	"ecommerce/pkg/database"
 	mylog "ecommerce/pkg/log"
 	"net/http"
@@ -38,15 +39,24 @@ func Run() error {
 	services := newServices(repos, cfg, logger, jwtManager)
 	handlers := newHandlers(services, logger)
 
-	modules := NewModules(handlers)
-	mux := myhttp.NewRouter(modules.All()...)
-	return serve(mux)
+	modules := newModules(handlers)
+	router := myhttp.NewRouter(
+		modules.All(),
+		publicMiddlewares(),
+		protectedMiddlewares(jwtManager),
+	)
+
+	handler := middleware.Chain(
+		router,
+		globalMiddlewares()...,
+	)
+	return serve(handler)
 }
 
-func serve(mux *http.ServeMux) error {
+func serve(handler http.Handler) error {
 	srv := &http.Server{
 		Addr:         ":8000",
-		Handler:      middleware(mux),
+		Handler:      handler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 5 * time.Second,
 	}

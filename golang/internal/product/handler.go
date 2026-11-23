@@ -1,8 +1,10 @@
 package product
 
 import (
+	"ecommerce/internal/product/domain"
+	"ecommerce/internal/response"
 	"ecommerce/pkg/log"
-	"fmt"
+	"encoding/json"
 	"net/http"
 )
 
@@ -18,8 +20,20 @@ func NewHandler(logger *log.Logger, service *Service) *Handler {
 func (h *Handler) CreateHandler(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	data := r.Body
-	fmt.Printf("%s", data)
+	var productForm domain.ProductForm
+	var resp response.ProductResponse
+	err := json.NewDecoder(r.Body).Decode(&productForm)
+
+	if err != nil {
+		resp.Err = "Failder to parse body:" + err.Error()
+		h.logger.Error(resp.Err)
+		response.WriteJson(w, http.StatusBadRequest, resp)
+		return
+	}
+
+	h.service.Create(r.Context(), &productForm)
+
+	response.WriteJson(w, http.StatusOK, resp)
 }
 
 func (h *Handler) UpdateHandler(w http.ResponseWriter, r *http.Request) {

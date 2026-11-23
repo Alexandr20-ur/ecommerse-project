@@ -8,4 +8,5 @@ type Router interface {
 
 type Module interface {
 	RegisterRoutes(r Router)
+	RegisterPublicRoutes(r Router)
 }

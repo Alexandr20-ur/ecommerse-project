@@ -21,3 +21,7 @@ func (m *Module) RegisterRoutes(router transport.Router) {
 	router.HandleFunc("GET /products", m.handler.GetAllHandler)
 	router.HandleFunc("GET /products/{id}", m.handler.ShowHandler)
 }
+
+func (m *Module) RegisterPublicRoutes(router transport.Router) {
+
+}

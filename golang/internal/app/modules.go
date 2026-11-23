@@ -12,7 +12,7 @@ type Modules struct {
 	Product *product.Module
 }
 
-func NewModules(h *myhttp.Handlers) *Modules {
+func newModules(h *myhttp.Handlers) *Modules {
 	return &Modules{
 		Auth:    auth.NewAuthModule(h.Auth),
 		Product: product.NewProductModule(h.Product),
