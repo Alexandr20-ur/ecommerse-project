@@ -18,6 +18,8 @@ func Run() error {
 		return err
 	}
 
+	defer logger.Close()
+
 	cfg, err := config.NewConfig(logger)
 	if err != nil {
 		return err
@@ -40,6 +42,7 @@ func Run() error {
 	handlers := newHandlers(services, logger)
 
 	modules := newModules(handlers)
+
 	router := myhttp.NewRouter(
 		modules.All(),
 		publicMiddlewares(),
@@ -48,7 +51,7 @@ func Run() error {
 
 	handler := middleware.Chain(
 		router,
-		globalMiddlewares()...,
+		globalMiddlewares(logger)...,
 	)
 	return serve(handler)
 }

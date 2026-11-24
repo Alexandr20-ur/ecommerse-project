@@ -1,2 +1,6 @@
 ./golang/app.log
 /golang/app.log
+.env
+/golang/__debug_bin*
+*.log
+/golang/tmp

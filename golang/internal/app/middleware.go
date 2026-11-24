@@ -3,6 +3,7 @@ package app
 import (
 	"ecommerce/internal/jwt"
 	"ecommerce/internal/middleware"
+	"ecommerce/pkg/log"
 )
 
 func publicMiddlewares() []middleware.Middleware {
@@ -15,8 +16,9 @@ func protectedMiddlewares(jwtManager *jwt.JWTManager) []middleware.Middleware {
 	}
 }
 
-func globalMiddlewares() []middleware.Middleware {
+func globalMiddlewares(logger *log.Logger) []middleware.Middleware {
 	return []middleware.Middleware{
 		middleware.CORS(),
+		middleware.Logger(logger),
 	}
 }

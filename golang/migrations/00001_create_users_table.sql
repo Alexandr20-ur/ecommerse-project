@@ -33,4 +33,4 @@ drop index idx_users_role;
 drop index idx_users_is_active;
 drop index idx_users_created_at;
 
-delete table users;
+drop table users;

@@ -55,14 +55,14 @@ func (h *Handler) handlerRegister(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		h.logger.Error("Failder to parse body:" + err.Error())
-		http.Error(w, "Failder to parse body:"+err.Error(), http.StatusBadRequest)
+		response.WriteJson(w, http.StatusBadRequest, "Failed to parse body:"+err.Error())
 		return
 	}
 
 	err = h.service.Register(r.Context(), &userForm)
 	if err != nil {
 		h.logger.Error("Failder to register user:" + err.Error())
-		http.Error(w, "Failder to register user:"+err.Error(), http.StatusBadRequest)
+		response.WriteJson(w, http.StatusUnauthorized, "Failed to register user:"+err.Error())
 		return
 	}
 

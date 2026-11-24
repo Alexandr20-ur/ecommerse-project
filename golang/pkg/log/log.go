@@ -3,6 +3,7 @@ package log
 import (
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 	"time"
 )
@@ -21,30 +22,52 @@ func New(path string) (*Logger, error) {
 	return &Logger{file: f}, nil
 }
 
-func (l *Logger) write(level, msg string) {
+func (l *Logger) Close() {
+	l.file.Close()
+}
+
+func (l *Logger) write(level, msg string, fields map[string]any) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	line := fmt.Sprintf("%s [%s] %s\n",
+	var logLine strings.Builder
+	logLine.WriteString(fmt.Sprintf("%s [%s] %s\n",
 		time.Now().Format("2006-01-02 15:04:05"),
 		level,
 		msg,
-	)
-	_, _ = l.file.WriteString(line)
+	))
+
+	if len(fields) > 0 {
+		for k, v := range fields {
+			logLine.WriteString(fmt.Sprintf(" | %s=%v", k, v))
+		}
+	}
+
+	logLine.WriteString("\n")
+
+	_, _ = l.file.WriteString(logLine.String())
 }
 
 func (l *Logger) Info(msg string) {
-	l.write("INFO", msg)
+	l.write("INFO", msg, nil)
 }
 
 func (l *Logger) Debug(msg string) {
-	l.write("DEBUG", msg)
+	l.write("DEBUG", msg, nil)
 }
 
 func (l *Logger) Error(msg string) {
-	l.write("ERROR", msg)
+	l.write("ERROR", msg, nil)
 }
 
 func (l *Logger) Warn(msg string) {
-	l.write("WARN", msg)
+	l.write("WARN", msg, nil)
+}
+
+func (l *Logger) InfoWithFields(msg string, fields map[string]any) {
+	l.write("INFO", msg, fields)
+}
+
+func (l *Logger) ErrorWithFields(msg string, fields map[string]any) {
+	l.write("ERROR", msg, fields)
 }
