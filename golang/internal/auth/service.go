@@ -2,28 +2,28 @@ package auth
 
 import (
 	"context"
+	"ecommerce/internal/auth/domain"
+	"ecommerce/internal/auth/dto"
 	"ecommerce/internal/errors"
+	apperrors "ecommerce/internal/errors"
+	"ecommerce/internal/jwt"
 	"ecommerce/pkg/log"
+	"strings"
 
-	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
-
-type TokenGenerator interface {
-	GenerateToken(userID uuid.UUID) (string, error)
-}
 
 type Service struct {
 	repository *UserRepository
 	logger     *log.Logger
-	tokens     TokenGenerator
+	jwtManager *jwt.JWTManager
 }
 
-func NewAuthService(repository *UserRepository, logger *log.Logger, tokens TokenGenerator) *Service {
-	return &Service{repository: repository, logger: logger, tokens: tokens}
+func NewAuthService(repository *UserRepository, logger *log.Logger, jwtManager *jwt.JWTManager) *Service {
+	return &Service{repository: repository, logger: logger, jwtManager: jwtManager}
 }
 
-func (s Service) Login(ctx context.Context, userForm *UserForm) (string, error) {
+func (s Service) Login(ctx context.Context, userForm *dto.UserForm) (string, error) {
 	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
 		return "", err //Ошибка базы данных(500)
@@ -39,7 +39,7 @@ func (s Service) Login(ctx context.Context, userForm *UserForm) (string, error) 
 		return "", errors.ErrInvalidCredentials
 	}
 
-	token, err := s.tokens.GenerateToken(user.ID)
+	token, err := s.jwtManager.GenerateToken(user.ID)
 	if err != nil {
 		return "", err
 	}
@@ -47,7 +47,7 @@ func (s Service) Login(ctx context.Context, userForm *UserForm) (string, error) 
 	return token, nil
 }
 
-func (s Service) Register(ctx context.Context, userForm *UserForm) error {
+func (s Service) Register(ctx context.Context, userForm *dto.UserForm) error {
 	user, err := s.repository.FindByEmail(ctx, userForm.Email)
 	if err != nil {
 		return err
@@ -65,7 +65,7 @@ func (s Service) Register(ctx context.Context, userForm *UserForm) error {
 		return err
 	}
 
-	user = NewUser(userForm.Email, string(hashPassword))
+	user = domain.NewUser(userForm.Email, string(hashPassword))
 
 	err = s.repository.Create(ctx, user)
 	if err != nil {
@@ -73,4 +73,29 @@ func (s Service) Register(ctx context.Context, userForm *UserForm) error {
 	}
 
 	return nil
+}
+
+func (s Service) CheckToken(ctx context.Context, jwtToken string) (*domain.User, error) {
+	parts := strings.SplitN(jwtToken, " ", 2)
+
+	// Проверяем, что формат верный: "Bearer <token>"
+	if len(parts) != 2 || !strings.EqualFold(parts[0], "Bearer") {
+		return nil, apperrors.ErrInvalidCredentials
+	}
+
+	tokenString := parts[1]
+
+	claims, err := s.jwtManager.ParseToken(tokenString)
+	if err != nil {
+		s.logger.Error("Failder to parse token:" + err.Error())
+		return nil, apperrors.ErrInvalidCredentials
+	}
+
+	user, err := s.repository.FindByID(ctx, claims.UserID.String())
+	if err != nil {
+		s.logger.Error("Failder to find user:" + err.Error())
+		return nil, apperrors.ErrInvalidCredentials
+	}
+
+	return user, nil
 }

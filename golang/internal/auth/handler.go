@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"ecommerce/internal/auth/dto"
 	"ecommerce/internal/response"
 	"ecommerce/pkg/log"
 	"encoding/json"
@@ -20,7 +21,7 @@ func NewAuthHandler(logger *log.Logger, authService *Service) *Handler {
 // Авторизация пользователя
 func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	var userForm UserForm
+	var userForm dto.UserForm
 	resp := response.LoginResponse{}
 
 	err := json.NewDecoder(r.Body).Decode(&userForm)
@@ -49,7 +50,7 @@ func (h *Handler) handlerAuth(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
-	var userForm UserForm
+	var userForm dto.UserForm
 
 	err := json.NewDecoder(r.Body).Decode(&userForm)
 
@@ -67,4 +68,23 @@ func (h *Handler) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintf(w, "OK")
+}
+
+// Проверка полученного токена пользователя
+func (h *Handler) handlerCheckJWT(w http.ResponseWriter, r *http.Request) {
+	jwtToken := r.Header.Get("Authorization")
+	if jwtToken == "" {
+		h.logger.Error("Failder to parse token")
+		response.WriteJson(w, http.StatusUnauthorized, "Failder to parse token")
+		return
+	}
+
+	user, err := h.service.CheckToken(r.Context(), jwtToken)
+	if err != nil {
+		h.logger.Error("Failder to check token:" + err.Error())
+		response.WriteJson(w, http.StatusUnauthorized, "Failder to check token")
+		return
+	}
+
+	response.WriteJson(w, http.StatusOK, dto.NewUserResponse(user))
 }

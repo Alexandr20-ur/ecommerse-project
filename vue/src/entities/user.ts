@@ -1,39 +1,96 @@
-import { defineStore } from 'pinia'
-import { notify } from '@kyvg/vue3-notification'
+import {defineStore} from 'pinia'
+import {notify} from '@kyvg/vue3-notification'
 import apiClient from '@/utils/axios.ts'
-import {AxiosError} from "axios";
+import {AxiosError} from 'axios'
 
-// 1. Интерфейс для ответа сервера при авторизации
-interface LoginResponse {
-    token: string
-    Err?: string // Поле ошибки из твоего Go-бэкенда
+// Интерфейс, который 1-в-1 совпадает с Go-структурой UserResponse
+export interface IUser {
+    id: string
+    email: string
+    phone?: string
+    full_name: string
+    avatar_url?: string
+    role: string
 }
 
-// 2. Интерфейс для состояния стора
 interface UserState {
-    user: object | null // Можно заменить на конкретный интерфейс IUser, если есть
+    user: IUser | null
     token: string | null
     isAuthenticated: boolean
+    isLoading: boolean
 }
 
 export const useUserStore = defineStore('user', {
     state: (): UserState => ({
         user: null,
         token: localStorage.getItem('accessToken') || null,
-        isAuthenticated: !!localStorage.getItem('accessToken'),
+        isAuthenticated: false,
+        isLoading: true,
     }),
 
     actions: {
-        async login({ email, password }: { email: string; password: string }): Promise<boolean> {
+        // Вспомогательная функция для красивых ошибок
+        _handleError(error: unknown, defaultMessage: string) {
+            let errorMessage = defaultMessage
+
+            if (error instanceof AxiosError) {
+                if (error.response) {
+                    // Бэкенд всегда присылает { error: "..." }
+                    const data = error.response.data
+                    if (data?.error) {
+                        errorMessage = data.error
+                    } else {
+                        errorMessage = `Ошибка сервера: ${error.response.status}`
+                    }
+                } else if (error.request) {
+                    errorMessage = 'Сервер недоступен. Проверьте подключение к интернету.'
+                } else {
+                    errorMessage = error.message
+                }
+            } else if (error instanceof Error) {
+                errorMessage = error.message
+            }
+
+            notify({
+                title: 'Ошибка',
+                type: 'error',
+                text: errorMessage,
+            })
+            console.error('Полная ошибка:', error)
+        },
+
+        async checkAuth(): Promise<void> {
+            if (!this.token) {
+                this.isLoading = false
+                return
+            }
+
             try {
-                const response = await apiClient.post<LoginResponse>('/auth', {
+                // Бэкенд отдает плоский объект IUser
+                const response = await apiClient.get<IUser>('/me')
+                this.user = response.data
+                this.isAuthenticated = true
+            } catch (error) {
+                console.warn('Token invalid or expired')
+                this.logout()
+            } finally {
+                this.isLoading = false
+            }
+        },
+
+        async login({email, password}: { email: string; password: string }): Promise<boolean> {
+            try {
+                // Бэкенд отдает { token: "..." }
+                const response = await apiClient.post<{ token: string }>('/auth', {
                     email,
                     password,
                 })
 
                 this.token = response.data.token
-                this.isAuthenticated = true
                 localStorage.setItem('accessToken', response.data.token)
+
+                // Сразу проверяем токен и подтягиваем юзера
+                await this.checkAuth()
 
                 notify({
                     title: 'Успех',
@@ -43,33 +100,23 @@ export const useUserStore = defineStore('user', {
 
                 return true
             } catch (error) {
-                let errorMessage = 'Произошла неизвестная ошибка'
+                this._handleError(error, 'Не удалось войти')
+                return false
+            }
+        },
 
-                // Типизируем ошибку как AxiosError для доступа к response/request
-                if (error instanceof AxiosError) {
-                    if (error.response) {
-                        const data = error.response.data as LoginResponse
-                        if (data?.Err) {
-                            errorMessage = data.Err
-                        } else {
-                            errorMessage = `Ошибка сервера: ${error.response.status}`
-                        }
-                    } else if (error.request) {
-                        errorMessage = 'Сервер недоступен. Проверьте подключение к интернету.'
-                    } else {
-                        errorMessage = error.message || errorMessage
-                    }
-                } else if (error instanceof Error) {
-                    errorMessage = error.message
-                }
+        async register({email, password}: { email: string; password: string }): Promise<boolean> {
+            try {
+                await apiClient.post('/register', {email, password})
 
                 notify({
-                    title: 'Ошибка',
-                    type: 'error',
-                    text: errorMessage,
+                    title: 'Успех',
+                    text: 'Регистрация прошла успешно! Теперь войдите.',
+                    type: 'success'
                 })
-
-                console.error('Полная ошибка:', error)
+                return true
+            } catch (error) {
+                this._handleError(error, 'Не удалось зарегистрироваться')
                 return false
             }
         },
@@ -77,32 +124,8 @@ export const useUserStore = defineStore('user', {
         logout(): void {
             this.token = null
             this.user = null
-            this.isAuthenticated = false // Не забываем сбрасывать флаг!
+            this.isAuthenticated = false
             localStorage.removeItem('accessToken')
-        },
-
-        async register({ email, password }: { email: string; password: string }): Promise<void> {
-            try {
-                const response = await apiClient.post('/register', {
-                    email,
-                    password,
-                })
-                console.log('Регистрация успешна:', response)
-
-                notify({
-                    title: 'Успех',
-                    text: 'Регистрация прошла успешно! Теперь войдите.',
-                    type: 'success'
-                })
-            } catch (error) {
-                // Можно добавить обработку ошибок аналогично login
-                console.error('Ошибка регистрации:', error)
-                notify({
-                    title: 'Ошибка',
-                    text: 'Не удалось зарегистрироваться',
-                    type: 'error'
-                })
-            }
         },
     },
 })

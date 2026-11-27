@@ -2,6 +2,8 @@ package auth
 
 import (
 	"context"
+	"ecommerce/internal/auth/domain"
+	apperrors "ecommerce/internal/errors"
 	"ecommerce/pkg/database"
 	"errors"
 
@@ -17,7 +19,7 @@ func NewUserRepository(pool *pgxpool.Pool) *UserRepository {
 	return &UserRepository{pool}
 }
 
-func (r UserRepository) Create(ctx context.Context, user *User) error {
+func (r UserRepository) Create(ctx context.Context, user *domain.User) error {
 
 	query := `
         INSERT INTO users (
@@ -50,19 +52,38 @@ func (r UserRepository) Create(ctx context.Context, user *User) error {
 	return nil
 }
 
-func (r UserRepository) FindByEmail(ctx context.Context, email string) (*User, error) {
+// FindByEmail Получаем пользователя по почте
+func (r UserRepository) FindByEmail(ctx context.Context, email string) (*domain.User, error) {
+	user, err := r.findOne(ctx, "email", email)
+	if err != nil {
+		return nil, err
+	}
 
+	return user, nil
+}
+
+// FindByID Получаем пользователя по ID
+func (r UserRepository) FindByID(ctx context.Context, id string) (*domain.User, error) {
+	user, err := r.findOne(ctx, "id", id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, nil
+}
+
+func (r UserRepository) findOne(ctx context.Context, field string, value any) (*domain.User, error) {
 	builder := database.Query().
 		Select().
 		From("users").
-		Where("email", "=", email)
+		Where(field, "=", value)
 
 	query, args, err := builder.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	var u User
+	var u domain.User
 
 	err = r.pool.QueryRow(ctx, query, args...).Scan(
 		&u.ID,
@@ -81,7 +102,7 @@ func (r UserRepository) FindByEmail(ctx context.Context, email string) (*User, e
 
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, nil // «не найден» — это не ошибка на уровне репозитория
+			return nil, apperrors.ErrUserNotFound
 		}
 		return nil, err
 	}

@@ -35,7 +35,11 @@ func Run() error {
 
 	defer pool.Close()
 
-	jwtManager := jwt.NewJWTManager(cfg.JWT.Secret, cfg.JWT.TTL)
+	jwtManager, err := jwt.NewJWTManager(&cfg.JWT)
+
+	if err != nil {
+		return err
+	}
 
 	repos := newRepositories(pool)
 	services := newServices(repos, cfg, logger, jwtManager)

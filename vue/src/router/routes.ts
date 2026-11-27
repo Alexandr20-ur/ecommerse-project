@@ -1,7 +1,7 @@
 import RegisterView from '@/views/RegisterView.vue'
 import HomeView from '@/views/HomeView.vue'
 import LoginView from '@/views/LoginView.vue'
-import AdminLayout from "@/views/administration/latouts/AdminLayout.vue";
+import AdminLayout from "@/views/administration/layouts/AdminLayout.vue"; // Проверь опечатку в latouts -> layouts
 import DashboardView from "@/views/administration/DashboardView.vue";
 import ProductsView from "@/views/administration/module/products/ProductsView.vue";
 import CreateProductsView from "@/views/administration/module/products/CreateProductsView.vue";
@@ -15,21 +15,22 @@ export const routes = [
     {
         path: '/login',
         name: 'login',
-        component: LoginView
+        component: LoginView,
+        meta: {isGuestOnly: true} // <-- Добавлено
     },
     {
         path: '/register',
         name: 'register',
-        component: RegisterView
+        component: RegisterView,
+        meta: {isGuestOnly: true} // <-- Добавлено
     },
-
     //===========================
     // ГРУППА: Админка
     //===========================
     {
         path: '/administration',
         component: AdminLayout,
-        meta: { requiresAuth: true, requiresAdmin: true},
+        meta: {requiresAuth: true, requiresAdmin: true},
         children: [
             {
                 path: '',

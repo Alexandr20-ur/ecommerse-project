@@ -29,8 +29,11 @@ type RedisConfig struct {
 }
 
 type JWTConfig struct {
-	Secret string
-	TTL    time.Duration
+	Secret          string
+	AccessTTL       time.Duration
+	RefreshTTL      time.Duration
+	RefreshRotation bool // выдавать новый refresh при каждом refresh
+	Leeway          time.Duration
 }
 
 func (config *Config) LoadConfig(logger *log.Logger) error {
@@ -49,8 +52,11 @@ func (config *Config) LoadConfig(logger *log.Logger) error {
 	}
 
 	config.JWT = JWTConfig{
-		Secret: os.Getenv("JWT_SECRET"),
-		TTL:    time.Hour,
+		Secret:          os.Getenv("JWT_SECRET"),
+		AccessTTL:       time.Hour,
+		RefreshTTL:      time.Hour,
+		Leeway:          30 * time.Second,
+		RefreshRotation: true,
 	}
 	return nil
 }

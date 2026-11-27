@@ -9,7 +9,7 @@ services:
     environment:
       NODE_ENV: development
       # Браузер ходит на API с хоста, не из контейнера Vue.
-      VITE_API_URL: http://localhost:8000/api
+      VITE_API_URL: http://localhost:8000
     volumes:
       - ./vue:/app
       - /app/node_modules
